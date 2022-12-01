@@ -3,18 +3,17 @@ open System.IO
 
 let sums filename = 
     let folder acc row =
-        if row = "" then []::acc
+        if row = "" then 0::acc
         else
             let n = int row
             let head = List.head acc
             let tail = List.tail acc
 
-            (n::head)::tail
+            (n+head)::tail
 
     filename
     |> File.ReadAllLines
-    |> Seq.fold folder [[]]
-    |> Seq.map (List.sum)
+    |> Seq.fold folder [0]
 
 let part1 filename =
     filename
