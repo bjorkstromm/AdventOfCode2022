@@ -26,4 +26,22 @@ let part1 filename =
     |> Seq.map (splitRucksackItems >> findCommonItem >> getPriority)
     |> Seq.sum
 
-"test.txt" |> part1
+// Part 2
+
+let divideInGroups rucksackItems =
+    rucksackItems
+    |> Seq.chunkBySize 3
+    |> Seq.map (fun g -> (g.[0], g.[1], g.[2]))
+
+let findCommonItem2 (c1, c2, c3) =
+    c1
+    |> Seq.filter (fun c -> c2 |> Seq.contains c)
+    |> Seq.filter (fun c -> c3 |> Seq.contains c)
+    |> Seq.head
+
+let part2 filename =
+    filename
+    |> rucksackItems
+    |> divideInGroups
+    |> Seq.map (findCommonItem2 >> getPriority)
+    |> Seq.sum
