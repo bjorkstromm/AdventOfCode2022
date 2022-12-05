@@ -88,17 +88,13 @@ let parse filename =
     (initial, moves)
 
 let exec (m : Map<int,Stack<char>>) op =
-    let count = op.Count
-    let from = op.From
-    let to' = op.To
-
     let rec loop count =
         if count > 0 then
-            let c = m.[from].Pop()
-            m.[to'].Push(c)
+            let c = m.[op.From].Pop()
+            m.[op.To].Push(c)
             loop (count - 1)
 
-    loop count
+    loop op.Count
     m
 
 let part1 filename =
@@ -108,6 +104,33 @@ let part1 filename =
 
     ops
     |> Seq.fold exec m
+    |> Map.toSeq
+    |> Seq.sortBy (fun (n,_) -> n)
+    |> Seq.map (fun (_,s) -> s.Peek())
+    |> Seq.toArray
+    |> System.String
+
+// Part 2
+
+let exec2 (m : Map<int,Stack<char>>) op =
+    let rec loop count acc =
+        if count > 0 then
+            let c = m.[op.From].Pop()
+            loop (count - 1) (c::acc)
+        else acc
+
+    loop op.Count []
+    |> List.iter (fun c -> m.[op.To].Push(c))
+
+    m
+
+let part2 filename =
+    let m, ops =
+        filename
+        |> parse
+
+    ops
+    |> Seq.fold exec2 m
     |> Map.toSeq
     |> Seq.sortBy (fun (n,_) -> n)
     |> Seq.map (fun (_,s) -> s.Peek())
