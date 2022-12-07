@@ -117,3 +117,20 @@ let part1 filename =
     |> getDirectories
     |> List.filter (fun dir -> dir.TotalSize <= 100000UL)
     |> List.sumBy (fun dir -> dir.TotalSize)
+
+let part2 filename =
+    let dirs =
+        filename
+        |> System.IO.File.ReadAllLines
+        |> parse
+        |> getDirectories
+
+    let totalSpace = 70000000UL
+    let totalNeeded = 30000000UL
+    let totalUsed = (dirs |> List.head).TotalSize
+    let toBeDeleted = totalNeeded - (totalSpace - totalUsed)
+
+    dirs
+    |> List.filter (fun dir -> dir.TotalSize >= toBeDeleted)
+    |> List.sortBy (fun dir -> dir.TotalSize)
+    |> List.head
