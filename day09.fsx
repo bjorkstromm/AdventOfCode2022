@@ -16,14 +16,14 @@ type Coordinate =
         Y : int
     }
     static member Default = { X = 0; Y = 0 }
+    override this.ToString() = sprintf "(%d,%d)" this.X this.Y
 
 type Rope =
     {
         Head : Coordinate
         Tail : Coordinate
     }
-    static member Default =
-    {
+    static member Default = {
         Head = Coordinate.Default
         Tail = Coordinate.Default
     }
@@ -87,3 +87,63 @@ let part1 filename =
     |> List.rev
     |> List.distinct
     |> List.length
+
+// part 2
+let move2 dir rope =
+    let touching (a : Coordinate) (b : Coordinate) =
+        abs (a.X - b.X) <= 1 && abs (a.Y - b.Y) <= 1
+
+    let move (prev, curr) =
+        if curr |> touching prev then curr
+        else
+            match dir with
+            | Up    -> { prev with Y = prev.Y + 1 }
+            | Down  -> { prev with Y = prev.Y - 1 }
+            | Left  -> { prev with X = prev.X + 1 }
+            | Right -> { prev with X = prev.X - 1 }
+
+    let head = rope |> Array.head
+    let head =
+        match dir with
+        | Up    -> { head with Y = head.Y - 1 }
+        | Down  -> { head with Y = head.Y + 1 }
+        | Left  -> { head with X = head.X - 1 }
+        | Right -> { head with X = head.X + 1 }
+
+    let folder (acc) curr =
+        let prev = acc |> List.head
+        let curr = move (prev, curr)
+        curr :: acc
+
+    rope.[1..]
+    |> Array.fold folder [head]
+    |> List.rev
+    |> Array.ofList
+
+
+let part2 filename =
+    let folder (rope, visited) instruction =
+        let rec loop rope visited i =
+            if i = instruction.Length then (rope, visited)
+            else
+                let rope' = move2 instruction.Direction rope
+                let visited' = rope'.[^0] :: visited
+
+                printfn "  %d : %A" i (rope' |> Array.map (fun c -> c.ToString()))
+                loop rope' visited' (i + 1)
+
+        printfn "Moving %A" instruction
+        loop rope visited 0
+
+    let initial = [|for i in 0..9 -> Coordinate.Default|]
+
+    filename
+    |> System.IO.File.ReadAllLines
+    |> parseInstructions
+    |> Seq.fold folder (initial, [Coordinate.Default])
+    |> snd
+    |> List.rev
+    |> List.distinct
+    |> List.length
+
+part2 "test.txt"
