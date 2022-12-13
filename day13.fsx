@@ -1,6 +1,10 @@
 type PacketData =
     | Integer of int
     | List of PacketData list
+    override this.ToString() =
+        match this with
+        | Integer x -> x.ToString()
+        | List x -> "[" + System.String.Join(",", x) + "]"
 
 let parsePacketData (data : string) =
     let rec loop (acc : PacketData list, data : char list) =
@@ -12,9 +16,18 @@ let parsePacketData (data : string) =
             loop (acc, rest)
         | ']' :: rest -> (acc |> List.rev, rest)
         | ',' :: rest -> loop (acc, rest)
-        | x :: rest ->
-            let num = x |> System.Char.GetNumericValue |> int
-            let acc = Integer num :: acc
+        | _ ->
+            let num =
+                data
+                |> List.takeWhile (fun x -> x <> ',' && x <> ']')
+                |> List.toArray
+                |> System.String
+
+            let rest =
+                data
+                |> List.skip (num.Length)
+
+            let acc = Integer (num |> int) :: acc
             loop (acc, rest)
 
     ([], data.ToCharArray() |> List.ofArray)
@@ -68,6 +81,6 @@ let part1 filename =
     |> List.filter (fun (_, result) -> result = true)
     |> List.sumBy fst
 
-"test.txt"
+"day13.txt"
 |> part1
 |> printfn "Part 1: %d"
