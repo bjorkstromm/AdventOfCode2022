@@ -35,27 +35,26 @@ let parsePacketData (data : string) =
     |> fst
     |> List.head
 
-let compare (left, right) =
+let compare left right =
     let rec loop left right =
         match left, right with
-        | [], [] -> None
-        | [], _  -> Some true
-        | _, []  -> Some false
+        | [], [] -> 0
+        | [], _  -> -1
+        | _, []  -> 1
         | Integer x :: left, Integer y :: right ->
-            if x > y then Some false
-            elif x < y then Some true
+            if x > y then 1
+            elif x < y then -1
             else loop left right
         | List x :: left, List y :: right ->
             match loop x y with
-            | Some result -> Some result
-            | _ -> loop left right
+            | 0 -> loop left right
+            | i -> i
         | Integer x :: left, List y :: right ->
             loop (List [Integer x]::left) (List y::right)
         | List x :: left, Integer y :: right ->
             loop (List x::left) (List [Integer y]::right)
 
     loop [left] [right]
-    |> Option.get
 
 let parsePacketDataPairs filename =
     let rec loop acc (lines : string []) =
@@ -76,11 +75,26 @@ let part1 filename =
     filename
     |> parsePacketDataPairs
     |> List.mapi (fun i (left, right) ->
-        let result = compare (left, right)
+        let result = compare left right
         (i+1, result))
-    |> List.filter (fun (_, result) -> result = true)
+    |> List.filter (fun (_, result) -> result = -1)
     |> List.sumBy fst
 
-"day13.txt"
-|> part1
-|> printfn "Part 1: %d"
+let part2 filename =
+    let div1 = List [ List [ Integer 2 ] ]
+    let div2 = List [ List [ Integer 6 ] ]
+    let sorted =
+        filename
+        |> parsePacketDataPairs
+        |> Seq.map (fun (left, right) -> [left; right])
+        |> Seq.concat
+        |> Seq.append [div1;div2]
+        |> Seq.sortWith compare
+        |> Seq.toArray
+
+    let idx1 = sorted |> Array.findIndex (fun x -> x = div1) |> (+) 1
+    let idx2 = sorted |> Array.findIndex (fun x -> x = div2) |> (+) 1
+
+    idx1 * idx2
+
+"day13.txt" |> part2
