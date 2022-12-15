@@ -96,11 +96,18 @@ let move2 dir rope =
     let move (prev, curr) =
         if curr |> touching prev then curr
         else
-            match dir with
-            | Up    -> { prev with Y = prev.Y + 1 }
-            | Down  -> { prev with Y = prev.Y - 1 }
-            | Left  -> { prev with X = prev.X + 1 }
-            | Right -> { prev with X = prev.X - 1 }
+            let (xdiff, vdiff) =
+                match (prev.X - curr.X), (prev.Y - curr.Y) with
+                | (2, 0)  -> (1, 0)
+                | (-2, 0) -> (-1, 0)
+                | (0, 2)  -> (0, 1)
+                | (0, -2) -> (0, -1)
+                | (1, 2)   | (2, 1)   | (2, 2)   -> (1, 1)
+                | (2, -1)  | (1, -2)  | (2, -2)  -> (1, -1)
+                | (-1, -2) | (-2, -1) | (-2, -2) -> (-1, -1)
+                | (-2, 1)  | (-1, 2)  | (-2, 2)  -> (-1, 1)
+                | diff -> failwithf "Invalid diff: %A" diff
+            { X = curr.X + xdiff; Y = curr.Y + vdiff }
 
     let head = rope |> Array.head
     let head =
@@ -128,14 +135,11 @@ let part2 filename =
             else
                 let rope' = move2 instruction.Direction rope
                 let visited' = rope'.[^0] :: visited
-
-                printfn "  %d : %A" i (rope' |> Array.map (fun c -> c.ToString()))
                 loop rope' visited' (i + 1)
 
-        printfn "Moving %A" instruction
         loop rope visited 0
 
-    let initial = [|for i in 0..9 -> Coordinate.Default|]
+    let initial = [|for _ in 0..9 -> Coordinate.Default|]
 
     filename
     |> System.IO.File.ReadAllLines
@@ -146,4 +150,4 @@ let part2 filename =
     |> List.distinct
     |> List.length
 
-part2 "test.txt"
+part2 "day09.txt"
